@@ -9,6 +9,7 @@ GEM
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
     mime-types (1.16)
+    mysql (2.8.1)
     polyglot (0.3.1)
     pony (1.2)
       mail (> 2.0)
@@ -19,4 +20,5 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  mysql
   pony
