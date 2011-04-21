@@ -4,7 +4,7 @@ require 'mysql'
 require 'date'
 
 recipients = [
-  'erik'
+  'erik',
 ]
 
 nag_password = 'kic-vup-kewv-'
@@ -24,8 +24,6 @@ id_maps.each_key do |k|
     id_maps[k][r[0].downcase] = r[1]
   end
 end
-
-puts id_maps
 
 Pony.options = {
   :from => 'nag@carbonfive.com', 
@@ -83,17 +81,14 @@ Net::POP3.start('pop.gmail.com', 995, 'nag@carbonfive.com', 'kic-vup-kewv-') do 
       end
 
       id_maps.each_key do |k|
-        puts k
-        puts post_params[k.to_s].downcase
         post_params["#{k.to_s}_id"] = id_maps[k][post_params[k.to_s].downcase]
         post_params.delete(k.to_s)
       end
-      puts post_params
 
-      
-      sql ="insert into taskentries (#{post_params.keys.join(',')}) values (#{post_params.keys.collect { |f| '?' }.join(',')});"
+      puts post_params
+      sql ="insert into taskentries (#{post_params.keys.join(',')},created_at, updated_at) values (#{post_params.keys.collect { |f| '?' }.join(',')},?,?);"
       st = my.prepare(sql)
-      st.execute(*post_params.values)
+      st.execute(*post_params.values, Time.now, Time.now)
       st.close
     end
   end
