@@ -1,5 +1,5 @@
 require './nag'
 
 nag = Nag::Nag.new
-nag.nag('erik')
+nag.collect_responses
 nag.close
