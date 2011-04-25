@@ -29,6 +29,15 @@ module Nag
         super
       end
     end
+
+    def convert_to_ids!(map)
+      IDKEYS.each do |k|
+        if post_params[k.to_s]
+          post_params["#{k.to_s}_id"] = send("#{k}_id_for".to_sym, post_params[k.to_s])
+          post_params.delete(k.to_s)
+        end
+      end
+    end
   end
 
 
@@ -62,18 +71,8 @@ module Nag
         pop.each_mail do |m|
           message = m.pop
           if message[/Subject:.*Timesheet Reminder/]
-            post_params = {}
-            post_params['worker'] = message.match(/From:.*<(.*)@carbonfive.com>/)[1]
-
-            NAG_KEYS.each do |k|
-              matched = message.match(/#{k}:(.*)/)
-              post_params[k.downcase] = matched[1].strip
-            end
-
-            TimesheetData::IDKEYS.each do |k|
-              post_params["#{k.to_s}_id"] = @td.send("#{k}_id_for".to_sym, post_params[k.to_s])
-              post_params.delete(k.to_s)
-            end
+            get_params_from_message message
+            @td.convert_to_ids! post_params
 
             puts post_params
             sql ="insert into taskentries (#{post_params.keys.join(',')},created_at, updated_at) values (#{post_params.keys.collect { |f| '?' }.join(',')},?,?);"
@@ -110,6 +109,18 @@ module Nag
         :via => :smtp,
         :via_options => { :address => 'smtp.carbonfive.com', :enable_starttls_auto => false }
       }
+    end
+
+    def get_params_from_message(msg)
+      post_params = {}
+      post_params['worker'] = message.match(/From:.*<(.*)@carbonfive.com>/)[1]
+
+      NAG_KEYS.each do |k|
+        matched = message.match(/#{k}:(.*)/)
+        post_params[k.downcase] = matched[1].strip
+      end
+
+      post_params
     end
 
     def recipients_for(names)
